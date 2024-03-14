@@ -1,0 +1,29 @@
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "Maximum number of inputs to a data selector having 3 control pins",
+      "answers": {
+        "a": "3",
+        "b": "8",
+        "c": "4",
+        "d": "9"
+      },
+      
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "How many 3 to 8 line decoders are required for a 1-of-32 decoder?",
+      "answers": {
+        "a": "8",
+        "b": "1",
+        "c": "4",
+        "d": "2"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    }
+  ]
+}
