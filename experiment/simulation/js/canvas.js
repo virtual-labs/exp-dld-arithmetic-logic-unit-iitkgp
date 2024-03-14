@@ -1,3 +1,9 @@
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 const bb_canvas = document.getElementById("bb_canvas");
 bb_canvas.height = 1000;
 bb_canvas.width = 1500;
@@ -6,7 +12,6 @@ const dc_canvas = document.getElementById("dc_canvas");
 dc_canvas.height = 1000;
 dc_canvas.width = 1500;
 const dc_ctx = dc_canvas.getContext("2d");
-
 available_id = 1;
 init_x = 20;
 init_y = 20;
@@ -50,6 +55,7 @@ r_jumper = false;
 high_clock = null;
 low_clock = null;
 
+
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
@@ -58,10 +64,78 @@ async function block_sleep(time) {
     await sleep(time);
 }
 
+var drawStar = function (ctx, cx, cy) {
+    var rot = Math.PI / 2 * 3;
+    var x = cx;
+    var y = cy;
+    var step = Math.PI / star_spikes;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - star_outerRadius);
+    for (var i = 0; i < star_spikes; i++) {
+        x = cx + Math.cos(rot) * star_outerRadius;
+        y = cy + Math.sin(rot) * star_outerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+        x = cx + Math.cos(rot) * star_innerRadius;
+        y = cy + Math.sin(rot) * star_innerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+    }
+    ctx.lineTo(cx, cy - star_outerRadius);
+    ctx.closePath();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'blue';
+    ctx.stroke();
+    ctx.fillStyle = 'skyblue';
+    ctx.fill();
+};
 
+var nearest_dot_old = function (x, y) {
+    var nr_x = (Math.floor(x / dot_gap) * dot_gap);
+    var mod_x = x % dot_gap;
+    var tmp = (dot_gap / 3) * 2;
+    if (mod_x > 0) {
+        if (mod_x > tmp) {
+            nr_x = nr_x + dot_gap;
+        }
+    }
+    var nr_y = (Math.floor(y / dot_gap) * dot_gap);
+    var mod_y = y % dot_gap;
+    if (mod_y > 0) {
+        if (mod_y > tmp) {
+            nr_y = nr_y + dot_gap;
+        }
+    }
+    x = nr_x;
+    y = nr_y;
+    return {x, y};
+};
 
+var nearest_dot = function (x, y) {
+    //console.log('in x: ' + x + " in y: " + y);
+    var left_x = (Math.floor(x / dot_gap) * dot_gap);
+    var right_x = left_x + dot_gap;
 
+    var d_left_x = x - left_x;
+    var d_right_x = right_x - x;
+    if (d_left_x <= d_right_x) {
+        x = left_x;
+    } else {
+        x = right_x;
+    }
 
+    var top_y = (Math.floor(y / dot_gap) * dot_gap);
+    var bottom_y = top_y + dot_gap;
+    var d_top_y = y - top_y;
+    var d_bottom_y = bottom_y - y;
+    if (d_top_y <= d_bottom_y) {
+        y = top_y;
+    } else {
+        y = bottom_y;
+    }
+    //console.log('out x: ' + x + " out y: " + y);
+    return {x, y};
+};
 
 class Breadboard {
     type = 'breadboard';
@@ -248,6 +322,100 @@ class Pin extends Element {
             ctx.fill();
         }
     }
+}
+
+class Clock extends Element {
+    type = 'clock';
+    val = -1;
+    association = [];
+    id = -1;
+    sel_flag = false;
+    constructor(id, x, y, high, low, trigger) {
+        super();
+        this.id = id;
+        var nr_pt = nearest_dot(x, y);
+        this.x = nr_pt.x;
+        this.y = nr_pt.y;
+        this.x = x;
+        this.y = y;
+        this.high = high;
+        this.low = low;
+        this.trigger = trigger;
+    }
+
+    draw_clock(ctx) {
+//        //console.log("x: " + this.x + " y: " + this.y + " val: " + this.val);
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x - (dot_gap / 2), this.y - (dot_gap / 2));
+        ctx.lineTo(this.x - (dot_gap / 2), this.y + (dot_gap / 2));
+        ctx.lineTo(this.x, this.y);
+        ctx.closePath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#333666';
+        ctx.stroke();
+        if (this.val === 1) {
+            ctx.fillStyle = 'green';
+        } else if (this.val === 0) {
+            ctx.fillStyle = 'red';
+        } else {
+            ctx.fillStyle = 'white';
+        }
+        ctx.fill();
+        if (this.sel_flag) {
+            drawStar(ctx, this.x, this.y);
+            drawStar(ctx, this.x - (dot_gap / 2), this.y - (dot_gap / 2));
+            drawStar(ctx, this.x - (dot_gap / 2), this.y + (dot_gap / 2));
+        }
+    }
+}
+
+class Memory {
+    id = -1;
+    inpt = {};
+    outpt = {};
+    val = -1;
+    association = [];
+    sel_flag = false;
+    type = 'memory';
+    constructor(id, x, y) {
+        this.id = id;
+        var nr_pt = nearest_dot(x, y);
+        this.inpt = nr_pt;
+        this.outpt.x = nr_pt.x + dot_gap;
+        this.outpt.y = nr_pt.y;
+        this.w = dot_gap;
+        this.h = 2 * (dot_gap / 3);
+    }
+
+    mouse_on_memory(x, y) {
+        var flag = false;
+        if (x >= this.inpt.x && x <= this.inpt.x + this.w && y >= this.inpt.y - dot_gap / 3 && y <= this.inpt.y - dot_gap / 3 + this.h) {
+            flag = true;
+        }
+        return flag;
+    }
+
+    draw_memory(ctx) {
+        ctx.beginPath();
+        ctx.rect(this.inpt.x, this.inpt.y - dot_gap / 3, this.w, this.h);
+        if (this.val === -1) {
+            this.color = 'grey';
+        } else if (this.val === 1) {
+            this.color = 'green';
+        } else if (this.val === 0) {
+            this.color = 'red';
+        }
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        if (this.sel_flag) {
+            drawStar(ctx, this.inpt.x, this.inpt.y - dot_gap / 3);
+            drawStar(ctx, this.inpt.x + this.w, this.inpt.y - dot_gap / 3);
+            drawStar(ctx, this.inpt.x, this.inpt.y - dot_gap / 3 + this.h);
+            drawStar(ctx, this.inpt.x + this.w, this.inpt.y - dot_gap / 3 + this.h);
+        }
+    }
+
 }
 
 class Chip extends Element {
@@ -606,15 +774,6 @@ class Connection extends Element {
         }
     }
 }
-
-
-
-
-
-
-
-
-
 
 class Circuit {
     cir_ele_map = {};
@@ -1775,14 +1934,6 @@ class Circuit {
 }
 
 
-
-
-
-
-
-
-
-
 class Component extends Circuit {
     pins = [];
     left_pins = [];
@@ -2137,6 +2288,7 @@ function getMousePos(evt) {
     };
 }
 
+
 let mouse_down = function (e) 
 {
     let pos = getMousePos(e);
@@ -2190,174 +2342,172 @@ let mouse_down = function (e)
     }
 //    //console.log("isConnecting: " + is_connecting + "l_jumper:" + l_jumper + " r_jumper:" + r_jumper);
 };
-
 let mouse_up = function (e) {
-    //    //console.log("isConnecting: " + is_connecting + " isDragging:" + is_dragging);
-        if (!is_dragging && !is_connecting) {
-            return;
+//    //console.log("isConnecting: " + is_connecting + " isDragging:" + is_dragging);
+    if (!is_dragging && !is_connecting) {
+        return;
+    }
+    e.preventDefault();
+    if (is_dragging && dragging_chip) {
+//        //console.log("releasing chip");
+        var chip = dc.cir_ele_map[drag_chip_index];
+        var x = chip.x;
+        var y = chip.y;
+//        //console.log(" up_x: " + x + " up_y: " + y);
+        var nr_pt = nearest_dot(x, y);
+        chip.x = nr_pt.x + (dot_width / 2);
+        chip.y = nr_pt.y - ((dot_height / 2) + chip_padding);
+        var dx = chip.x - x;
+        var dy = chip.y - y;
+        for (let in_pin of chip.in_pins) {
+            in_pin.x = in_pin.x + dx;
+            in_pin.y = in_pin.y + dy;
         }
-        e.preventDefault();
-        if (is_dragging && dragging_chip) {
-    //        //console.log("releasing chip");
-            var chip = dc.cir_ele_map[drag_chip_index];
-            var x = chip.x;
-            var y = chip.y;
-    //        //console.log(" up_x: " + x + " up_y: " + y);
-            var nr_pt = nearest_dot(x, y);
-            chip.x = nr_pt.x + (dot_width / 2);
-            chip.y = nr_pt.y - ((dot_height / 2) + chip_padding);
-            var dx = chip.x - x;
-            var dy = chip.y - y;
-            for (let in_pin of chip.in_pins) {
-                in_pin.x = in_pin.x + dx;
-                in_pin.y = in_pin.y + dy;
-            }
-    //        //console.log("releasing chip ch1");
-    
-            for (let out_pin of chip.out_pins) {
-                out_pin.x = out_pin.x + dx;
-                out_pin.y = out_pin.y + dy;
-            }
-    //        //console.log("releasing chip ch2");
-            dc.redraw();
-    //        //console.log("releasing chip ch3");
-        } else if (is_dragging && dragging_component) {
-    //        //console.log(" is_dragging: " + is_dragging + " dragging_component: " + dragging_component);
-            var comp = dc.cir_ele_map[drag_comp_index];
-            var x = comp.x;
-            var y = comp.y;
-            var nr_pt = nearest_dot(x, y);
-            comp.x = nr_pt.x + (dot_width / 2);
-            comp.y = nr_pt.y - ((dot_height / 2) + chip_padding);
-            var dx = comp.x - x;
-            var dy = comp.y - y;
-            for (let pin of comp.pins) {
-                pin.x = pin.x + dx;
-                pin.y = pin.y + dy;
-            }
-            dc.redraw();
-        } else if (is_dragging && dragging_bit) {
-            var bit = dc.cir_ele_map[sel_bit_index];
-            var x = bit.x;
-            var y = bit.y;
-            var nr_pt = nearest_dot(x, y);
-            bit.x = nr_pt.x;
-            bit.y = nr_pt.y;
-            dc.redraw();
-        } else if (is_dragging && dragging_memory) {
-            var bit = dc.cir_ele_map[sel_memory_index];
-            var x = bit.inpt.x;
-            var y = bit.inpt.y;
-            var nr_pt = nearest_dot(x, y);
-            bit.inpt.x = nr_pt.x;
-            bit.inpt.y = nr_pt.y;
-            bit.outpt.x = bit.inpt.x + dot_gap;
-            bit.outpt.y = bit.inpt.y;
-            dc.redraw();
-        } else if (is_dragging && dragging_clock) {
-            var clock = dc.cir_ele_map[dc.clock_id];
-            var x = clock.x;
-            var y = clock.y;
-            var nr_pt = nearest_dot(x, y);
-            clock.x = nr_pt.x;
-            clock.y = nr_pt.y;
-            dc.redraw();
-        } else if (is_connecting) {
-            var new_pos = getMousePos(e);
-            var new_x = new_pos.x;
-            var new_y = new_pos.y;
-            //var new_x = new_pos.x - 9;
-            //var new_y = new_pos.y - 9;
-            if (dc.position_in_dot(new_x, new_y) && (!(nr_dot.x === start_dot.x && nr_dot.y === start_dot.y))
-                    && ((nr_dot.x === start_dot.x && nr_dot.y !== start_dot.y) || (nr_dot.x !== start_dot.x && nr_dot.y === start_dot.y))) {
-    //            //console.log("end position");
-                var end_pt = {};
-                end_pt.x = nr_dot.x;
-                end_pt.y = nr_dot.y;
-                if ((l_jumper || r_jumper) && (start_dot.x === end_pt.x && Math.abs(start_dot.y - end_pt.y) === 2 * dot_gap)) {
-                    if (start_dot.y > end_pt.y) {
-                        var tmp;
-                        tmp = start_dot.y;
-                        start_dot.y = end_pt.y;
-                        end_pt.y = tmp;
-                    }
-                    var jumper;
-                    if (l_jumper) {
-                        jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'V', 'L');
-                        jumper.type = 'jumper';
-                    } else {
-                        jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'V', 'R');
-                        jumper.type = 'jumper';
-                    }
-                    available_id = available_id + 1;
-                    dc.add_line_segment(jumper);
-                    dc.add_jumper(jumper);
-                    var flag = dc.add_to_connection(jumper);
-    //                //console.log("jumper add_to_connection flag:" + flag);
-                } else if ((l_jumper || r_jumper) && (start_dot.y === end_pt.y && Math.abs(start_dot.x - end_pt.x) === 2 * dot_gap)) {
-                    if (start_dot.x > end_pt.x) {
-                        var tmp;
-                        tmp = start_dot.x
-                        start_dot.x = end_pt.x;
-                        end_pt.x = tmp;
-                    }
-                    var jumper;
-                    if (l_jumper) {
-                        jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'H', 'L');
-                        jumper.type = 'jumper';
-                    } else {
-                        jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'H', 'R');
-                        jumper.type = 'jumper';
-                    }
-                    available_id = available_id + 1;
-                    dc.add_line_segment(jumper);
-                    dc.add_jumper(jumper);
-                    var flag = dc.add_to_connection(jumper);
-    //                //console.log("jumper add_to_connection flag:" + flag);
-                } else {
-                    var ln_segment = new LineSegment(available_id, start_dot, end_pt);
-                    ln_segment.type = 'linesegment';
-                    available_id = available_id + 1;
-                    if (ln_segment.orientation === 'H') {
-                        if (ln_segment.start_pt.x > ln_segment.end_pt.x) {
-                            var tmp = ln_segment.start_pt.x;
-                            ln_segment.start_pt.x = ln_segment.end_pt.x;
-                            ln_segment.end_pt.x = tmp;
-                        }
-                    } else {
-                        if (ln_segment.start_pt.y > ln_segment.end_pt.y) {
-                            var tmp = ln_segment.start_pt.y;
-                            ln_segment.start_pt.y = ln_segment.end_pt.y;
-                            ln_segment.end_pt.y = tmp;
-                        }
-                    }
-                    dc.add_line_segment(ln_segment);
-                    var flag = dc.add_to_connection(ln_segment);
+//        //console.log("releasing chip ch1");
+
+        for (let out_pin of chip.out_pins) {
+            out_pin.x = out_pin.x + dx;
+            out_pin.y = out_pin.y + dy;
+        }
+//        //console.log("releasing chip ch2");
+        dc.redraw();
+//        //console.log("releasing chip ch3");
+    } else if (is_dragging && dragging_component) {
+//        //console.log(" is_dragging: " + is_dragging + " dragging_component: " + dragging_component);
+        var comp = dc.cir_ele_map[drag_comp_index];
+        var x = comp.x;
+        var y = comp.y;
+        var nr_pt = nearest_dot(x, y);
+        comp.x = nr_pt.x + (dot_width / 2);
+        comp.y = nr_pt.y - ((dot_height / 2) + chip_padding);
+        var dx = comp.x - x;
+        var dy = comp.y - y;
+        for (let pin of comp.pins) {
+            pin.x = pin.x + dx;
+            pin.y = pin.y + dy;
+        }
+        dc.redraw();
+    } else if (is_dragging && dragging_bit) {
+        var bit = dc.cir_ele_map[sel_bit_index];
+        var x = bit.x;
+        var y = bit.y;
+        var nr_pt = nearest_dot(x, y);
+        bit.x = nr_pt.x;
+        bit.y = nr_pt.y;
+        dc.redraw();
+    } else if (is_dragging && dragging_memory) {
+        var bit = dc.cir_ele_map[sel_memory_index];
+        var x = bit.inpt.x;
+        var y = bit.inpt.y;
+        var nr_pt = nearest_dot(x, y);
+        bit.inpt.x = nr_pt.x;
+        bit.inpt.y = nr_pt.y;
+        bit.outpt.x = bit.inpt.x + dot_gap;
+        bit.outpt.y = bit.inpt.y;
+        dc.redraw();
+    } else if (is_dragging && dragging_clock) {
+        var clock = dc.cir_ele_map[dc.clock_id];
+        var x = clock.x;
+        var y = clock.y;
+        var nr_pt = nearest_dot(x, y);
+        clock.x = nr_pt.x;
+        clock.y = nr_pt.y;
+        dc.redraw();
+    } else if (is_connecting) {
+        var new_pos = getMousePos(e);
+        var new_x = new_pos.x;
+        var new_y = new_pos.y;
+        //var new_x = new_pos.x - 9;
+        //var new_y = new_pos.y - 9;
+        if (dc.position_in_dot(new_x, new_y) && (!(nr_dot.x === start_dot.x && nr_dot.y === start_dot.y))
+                && ((nr_dot.x === start_dot.x && nr_dot.y !== start_dot.y) || (nr_dot.x !== start_dot.x && nr_dot.y === start_dot.y))) {
+//            //console.log("end position");
+            var end_pt = {};
+            end_pt.x = nr_dot.x;
+            end_pt.y = nr_dot.y;
+            if ((l_jumper || r_jumper) && (start_dot.x === end_pt.x && Math.abs(start_dot.y - end_pt.y) === 2 * dot_gap)) {
+                if (start_dot.y > end_pt.y) {
+                    var tmp;
+                    tmp = start_dot.y;
+                    start_dot.y = end_pt.y;
+                    end_pt.y = tmp;
                 }
-                dc.redraw();
+                var jumper;
+                if (l_jumper) {
+                    jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'V', 'L');
+                    jumper.type = 'jumper';
+                } else {
+                    jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'V', 'R');
+                    jumper.type = 'jumper';
+                }
+                available_id = available_id + 1;
+                dc.add_line_segment(jumper);
+                dc.add_jumper(jumper);
+                var flag = dc.add_to_connection(jumper);
+//                //console.log("jumper add_to_connection flag:" + flag);
+            } else if ((l_jumper || r_jumper) && (start_dot.y === end_pt.y && Math.abs(start_dot.x - end_pt.x) === 2 * dot_gap)) {
+                if (start_dot.x > end_pt.x) {
+                    var tmp;
+                    tmp = start_dot.x
+                    start_dot.x = end_pt.x;
+                    end_pt.x = tmp;
+                }
+                var jumper;
+                if (l_jumper) {
+                    jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'H', 'L');
+                    jumper.type = 'jumper';
+                } else {
+                    jumper = new Jumper(available_id, start_dot.x, start_dot.y, 'H', 'R');
+                    jumper.type = 'jumper';
+                }
+                available_id = available_id + 1;
+                dc.add_line_segment(jumper);
+                dc.add_jumper(jumper);
+                var flag = dc.add_to_connection(jumper);
+//                //console.log("jumper add_to_connection flag:" + flag);
+            } else {
+                var ln_segment = new LineSegment(available_id, start_dot, end_pt);
+                ln_segment.type = 'linesegment';
+                available_id = available_id + 1;
+                if (ln_segment.orientation === 'H') {
+                    if (ln_segment.start_pt.x > ln_segment.end_pt.x) {
+                        var tmp = ln_segment.start_pt.x;
+                        ln_segment.start_pt.x = ln_segment.end_pt.x;
+                        ln_segment.end_pt.x = tmp;
+                    }
+                } else {
+                    if (ln_segment.start_pt.y > ln_segment.end_pt.y) {
+                        var tmp = ln_segment.start_pt.y;
+                        ln_segment.start_pt.y = ln_segment.end_pt.y;
+                        ln_segment.end_pt.y = tmp;
+                    }
+                }
+                dc.add_line_segment(ln_segment);
+                var flag = dc.add_to_connection(ln_segment);
             }
+            dc.redraw();
         }
-
-        l_jumper = false;
-            r_jumper = false;
-            is_dragging = false;
-            dragging_chip = false;
-            dragging_component = false;
-            dragging_clock = false;
-            dragging_bit = false;
-            dragging_mouse = false;
-            dragging_memory = false;
-            drag_chip_index = -1;
-            drag_comp_index = -1;
-            sel_bit_index = -1;
-            sel_memory_index = -1;
-            start_x = undefined;
-            start_y = undefined;
-            start_dot = {};
-            nr_dot = {};
-            is_connecting = false;
+    }
+    l_jumper = false;
+    r_jumper = false;
+    is_dragging = false;
+    dragging_chip = false;
+    dragging_component = false;
+    dragging_clock = false;
+    dragging_bit = false;
+    dragging_mouse = false;
+    dragging_memory = false;
+    drag_chip_index = -1;
+    drag_comp_index = -1;
+    sel_bit_index = -1;
+    sel_memory_index = -1;
+    start_x = undefined;
+    start_y = undefined;
+    start_dot = {};
+    nr_dot = {};
+    is_connecting = false;
+//    //console.log("isConnecting: " + is_connecting);
 };
-
 let mouse_out = function (e) {
     if (!is_dragging && !is_connecting) {
         return;
@@ -2374,7 +2524,6 @@ let mouse_out = function (e) {
     dragging_bit = false;
     dragging_memory = false;
 };
-
 let mouse_move = function (e) {
     if (!is_dragging && !is_connecting) {
         return;
@@ -2413,6 +2562,76 @@ let mouse_move = function (e) {
     }
 };
 
+function select_element(pos, x, y) {
+    if (dc.clicked_in_chip(x, y)) {
+        var chip = dc.cir_ele_map[drag_chip_index];
+        if (chip.sel_flag) {
+            chip.sel_flag = false;
+            drag_chip_index = -1;
+            $("#curr_memory").val(dc.memory);
+        } else {
+            chip.sel_flag = true;
+            $("#curr_memory").val(chip.memory);
+        }
+        dc.redraw();
+    } else if (dc.clicked_on_component(x, y)) {
+        var comp = dc.cir_ele_map[drag_comp_index];
+        if (comp.sel_flag) {
+            comp.sel_flag = false;
+            drag_comp_index = -1;
+            $("#curr_memory").val(dc.memory);
+        } else {
+            comp.sel_flag = true;
+            $("#curr_memory").val(comp.memory);
+        }
+        dc.redraw();
+    } else if (dc.clicked_in_bit(x, y)) {
+        var bit = dc.cir_ele_map[sel_bit_index];
+        if (bit.sel_flag) {
+            bit.sel_flag = false;
+            sel_bit_index = -1;
+        } else {
+            bit.sel_flag = true;
+        }
+        dc.redraw();
+    } else if (dc.clicked_on_memory(x, y)) {
+        var bit = dc.cir_ele_map[sel_memory_index];
+        if (bit.sel_flag) {
+            bit.sel_flag = false;
+            sel_memory_index = -1;
+            $("#conn_id").val("");
+            $("#conn_val").val("");
+        } else {
+            bit.sel_flag = true;
+            $("#conn_id").val(bit.id);
+            $("#conn_val").val(bit.val);
+        }
+        dc.redraw();
+    } else if (dc.clicked_on_clock(x, y)) {
+        var clock = dc.cir_ele_map[dc.clock_id];
+        if (clock.sel_flag) {
+            clock.sel_flag = false;
+        } else {
+            clock.sel_flag = true;
+        }
+        dc.redraw();
+    } else if (dc.position_on_conn(x, y)) {
+        var conn = dc.cir_ele_map[sel_conn_index];
+        if (conn.sel_flag) {
+            conn.sel_flag = false;
+            sel_conn_index = -1;
+            $("#conn_id").val("");
+            $("#conn_val").val("");
+        } else {
+            conn.sel_flag = true;
+            $("#conn_id").val(conn.id);
+            $("#conn_val").val(conn.val);
+        }
+        dc.redraw();
+    }
+}
+;
+
 let mouse_dblClick = function (e) {
     e.preventDefault();
     var pos = getMousePos(e);
@@ -2446,7 +2665,162 @@ let key_down = function (e) {
         }
     }
 };
+function load_component(json, x, y) {
+    var component = new Component(available_id, dc_ctx, json, x, y);
+    available_id = available_id + 1;
+    dc.add_component(component);
+    for (let pin of component.in_pins) {
+        dc.cir_ele_map[pin.id] = pin;
+        var pin_number = pin.number;
+        var bit_clock_id = component.inpin_map[pin_number];
+        if (component.cir_ele_map[bit_clock_id].type === 'clock') {
+            pin.clock_flag = true;
+        }
+    }
+    for (let pin of component.out_pins) {
+        dc.cir_ele_map[pin.id] = pin;
+    }
+    dc.redraw();
+}
 
+function load_circuit(json) {
+    available_id = Math.max(...json.cir_ele);
+    dc.memory = json.memory;
+    dc.name = json.name;
+    if (json.cir_ele_map !== undefined) {
+        for (let key of Object.keys(json.cir_ele_map)) {
+            var ele_data = json.cir_ele_map[key];
+            var id = ele_data.id;
+            var type = ele_data.type;
+            if (type !== 'InPin' && type !== 'OutPin') {
+                let ele = null;
+                if (type === 'chip') {
+                    ele = new Chip(id, ele_data.x, ele_data.y, ele_data.inputs, ele_data.outputs, ele_data.label);
+                    for (let pin of ele.in_pins) {
+                        for (let j = 0; j < ele_data.in_pins.length; j++) {
+                            var json_pin = ele_data.in_pins[j];
+                            if (json_pin.number === pin.number) {
+                                pin.id = json_pin.id;
+                                dc.cir_ele_map[pin.id] = pin;
+                                pin.association = json_pin.association;
+                                //console.log("this.cir_ele_map.size: " + Object.keys(dc.cir_ele_map).length);
+                                break;
+                            }
+
+                        }
+                    }
+                    for (let pin of ele.out_pins) {
+                        for (let json_pin of ele_data.out_pins) {
+                            if (json_pin.number === pin.number) {
+                                pin.id = json_pin.id;
+                                dc.cir_ele_map[pin.id] = pin;
+                                pin.association = json_pin.association;
+                                break;
+                            }
+                        }
+                    }
+                    dc.chips.push(id);
+                } else if (type === 'component') {
+                    ele = new Component(id, dc_ctx, ele_data, ele_data.x, ele_data.y);
+                    for (let pin of ele.in_pins) {
+                        for (let j = 0; j < ele_data.in_pins.length; j++) {
+                            var json_pin = ele_data.in_pins[j];
+                            if (json_pin.number === pin.number) {
+                                pin.id = json_pin.id;
+                                dc.cir_ele_map[pin.id] = pin;
+                                pin.association = json_pin.association;
+                                //console.log("this.cir_ele_map.size: " + Object.keys(dc.cir_ele_map).length);
+                                break;
+                            }
+
+                        }
+                    }
+                    for (let pin of ele.out_pins) {
+                        for (let json_pin of ele_data.out_pins) {
+                            if (json_pin.number === pin.number) {
+                                pin.id = json_pin.id;
+                                dc.cir_ele_map[pin.id] = pin;
+                                pin.association = json_pin.association;
+                                break;
+                            }
+                        }
+                    }
+                    dc.components.push(id);
+                } else if (type === 'connection') {
+                    let st_pt = {};
+                    st_pt.x = ele_data.start_pt.x;
+                    st_pt.y = ele_data.start_pt.y;
+                    let end_pt = {};
+                    end_pt.x = ele_data.end_pt.x;
+                    end_pt.y = ele_data.end_pt.y;
+                    let ls = [];
+                    ele = new Connection(st_pt, end_pt, ls);
+                    ele.id = ele_data.id;
+                    var ls_list = ele_data.line_segments;
+                    for (let ls of ls_list) {
+                        var ls_start_pt = ls.start_pt;
+                        var ls_end_pt = ls.end_pt;
+                        var ls_id = ls.id;
+                        var ls_obj = null;
+                        if (ls.type === 'linesegment') {
+                            ls_obj = new LineSegment(ls_id, ls_start_pt, ls_end_pt);
+                            dc.ln_segs.push(ls_id);
+                        } else {
+                            ls_obj = new Jumper(ls_id, ls_start_pt.x, ls_start_pt.y, ls.direction, ls.orientation);
+                            dc.ln_segs.push(ls_id);
+                            dc.jumpers.push(ls_id);
+                        }
+                        ele.line_segments.push(ls_obj);
+                        ele.terminal_pts = ele_data.terminal_pts;
+                    }
+//                    var terminal_pts = ele_data.terminal_pts;
+//                    for (let pt of terminal_pts) {
+//                        ele.terminal_pts.push(pt);
+//                    }
+                    dc.connections.push(id);
+                } else if (type === 'outbit') {
+                    ele = new Out_Bit(id, ele_data.x, ele_data.y);
+                    dc.outbit_pts.push(id);
+                    dc.bits.push(id);
+                } else if (type === 'inbit') {
+                    ele = new In_Bit(id, ele_data.x, ele_data.y);
+                    dc.inbit_pts.push(id);
+                    dc.bits.push(id);
+                } else if (type === 'memory') {
+                    ele = new Memory(id, ele_data.inpt.x, ele_data.inpt.y);
+                    ele.val = ele_data.val;
+                    ele.association = ele_data.association;
+                    dc.memory_bits.push(id);
+                } else if (type === 'clock') {
+                    ele = new Clock(id, ele_data.x, ele_data.y, ele_data.high, ele_data.low, ele_data.trigger);
+                    dc.clock_id = id;
+                }
+
+//                else if (type === 'linesegment') {
+//                    ele = new Linesegment(id, ele_data.start_pt, ele_data.end_pt);                    
+//                } else if (type === 'jumper') {
+//                    ele = new Jumper(id, ele_data.start_pt, ele_data.end_pt, ele_data.direction, ele_data.orientation);                     
+//                }
+
+                if (ele !== null) {
+                    dc.cir_ele.push(id);
+                    dc.cir_ele_map[id] = ele;
+                }
+            }
+        }
+    }
+    dc.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    dc.redraw();
+}
+
+//function load_circuit(json) {
+//    dc.load_from_json(json);
+//    dc.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+//    dc.redraw();
+//}
+
+
+//This is for the GATE buttons' click function
 $(document).ready(function () {
     $(".node").on('click', function () {
         var in_pin;
@@ -2490,6 +2864,7 @@ $(document).ready(function () {
         dc.redraw();
     });
 
+    // This is for the BITSwitch and BITDisplay buttons' click function
     $(".switch").on('click', function () {
         var bit;
         if (this.id === "BITSwitch") {
@@ -2507,22 +2882,172 @@ $(document).ready(function () {
         }
         dc.redraw();
     });
-});
 
+    //This is for the "Add Clock" button's click function
+    $("#add_clock").on('click', function () {
+        var high = $("#high_period").val();
+        var low = $("#low_period").val();
+        var trigger = document.querySelector('input[name="trigger"]:checked').value;
+        //alert("trigger: " + trigger);
+        if (high === '' || low === '' || trigger === '') {
+            alert("Please enter high and low period and trigger type for clock");
+        } else {
+            var clock = new Clock(available_id, init_x, init_y, high, low, trigger);
+            available_id = available_id + 1;
+            dc.add_clock(clock);
+            dc.redraw();
+        }
+    });
+
+    //This is for the 'memory' button's click function
+    $("#add_memory").on('click', function () {
+        var memory = document.querySelector('input[name="memory"]:checked').value;
+        if (memory === '1' || memory === '0') {
+            var flag = false;
+            for (let id of dc.cir_ele) {
+                var ele = dc.cir_ele_map[id];
+                if (ele.sel_flag) {
+                    if (ele.type === 'chip' || ele.type === 'component') {
+                        ele.memory = parseInt(memory);
+                        $("#curr_memory").val(ele.memory);
+                        flag = true;
+                        break;
+                    }
+                }
+            }
+            if (!flag) {
+                dc.memory = parseInt(memory);
+                $("#curr_memory").val(dc.memory);
+            }
+        }
+    });
+
+    //This is for the 'Set' Button
+    $("#set_val_btn").on('click', function () {
+        dc.updateElementAssociation();
+        var val = $("#init_val").val();
+        val = parseInt(val);
+        for (let conn_id of dc.connections) {
+            var conn = dc.cir_ele_map[conn_id];
+            if (conn.sel_flag === true) {
+                conn.val = val;
+                for (let id of conn.association) {
+                    var assoc = dc.cir_ele_map[id];
+                    if (assoc.type === 'InPin' || assoc.type === 'outbit' || assoc.type === 'memory') {
+                        assoc.val = conn.val;
+                    }
+                }
+            }
+        }
+        dc.redraw();
+    });
+
+    //This is for the 'reset' button
+    $("#reset_val_btn").on('click', function () {
+        dc.reset_circuit();
+        dc.redraw();
+    });
+    function loop_clock(clock, count, i, val) {
+        setTimeout(function () {
+            if (i <= count * 2) {
+                console.log('cycle: ' + i);
+                clock.val = val;
+                dc.redraw();
+                if (((clock.trigger === '1' || clock.trigger === '3') && val === '1') || ((clock.trigger === '2' || clock.trigger === '4') && val === 0)) {
+                    dc.simulate();
+                    dc.redraw();
+                    dc.reset_circuit();
+                }
+                i++;
+                val = val === 0 ? 1 : 0;
+                loop_clock(clock, count, i, val);
+            } else {
+                clock.val = -1;
+                dc.redraw();
+            }
+        }, 1000);
+    }
+
+    //This is for the Trigger Clock button
+    $("#start_clock").on('click', function () {
+//var cycles = $("#no_of_cycles").val();
+        var cycles = 1;
+        dc.updateElementAssociation();
+        //dc.updateElementDependency();
+        //dc.updateCircuitLayerInfo();
+
+        var clock = dc.cir_ele_map[dc.clock_id];
+        clock.val = 1;
+        dc.redraw();
+        if (clock.trigger === '1' || clock.trigger === '3') {
+            dc.simulate();
+            dc.redraw();
+            dc.reset_circuit();
+        }
+        setTimeout(function () {
+            clock.val = 0;
+            dc.redraw();
+            if (clock.trigger === '2' || clock.trigger === '4') {
+                dc.simulate();
+                dc.redraw();
+                dc.reset_circuit();
+            }
+            var next_cycle = 3;
+            var next_val = 1;
+            loop_clock(clock, cycles, next_cycle, next_val);
+        }, 1000);
+    });
+
+    //This is for the 'Start Simulation' button
+    $("#sim_btn").on('click', function () {
+        stop_simulation_flag = false;
+        dc.updateElementAssociation();
+//        for (let id of dc.connections) {
+//            var conn = dc.cir_ele_map[id];
+//            for (let assoc_id of conn.association) {
+//                var assoc = dc.cir_ele_map[assoc_id];
+//                console.log(" conn_id: " + id + " assoc id: " + assoc_id + " type: " + assoc.type);
+//            }
+//        }
+        //return 0;
+        //dc.updateElementDependency();
+        //dc.updateCircuitLayerInfo();
+        dc.simulate();
+        dc.redraw();
+        dc.reset_circuit();
+    });
+
+    //Not Found
+    $("#stop_btn").on('click', function () {
+        stop_simulation_flag = true;
+    });
+
+    //This is for the 'Save As Component' button
+    $("#save_dc_btn").on('click', function () {
+        var name = $("#comp_name").val();
+        var pin_desc = $("#pin_desc").val();
+        dc.updateElementAssociation();
+        dc.updateElementDependency();
+        dc.updateCircuitLayerInfo();
+        dc.save_as_component(name, pin_desc);
+    });
+
+    //This is for the 'Add Component' button
+    $("#add-component-button").on('click', function () {
+        const json = JSON.parse(document.getElementById("data").value);
+        load_component(json, init_x, init_y);
+    });
+
+    //This is for the 'Load Circuit' button
+    $("#load-circuit-button").on('click', function () {
+        const json = JSON.parse(document.getElementById("data").value);
+        load_circuit(json);
+    });
+});
 dc_canvas.addEventListener('mousedown', mouse_down);
 dc_canvas.addEventListener('mouseup', mouse_up);
 dc_canvas.addEventListener('mousemove', mouse_move);
 dc_canvas.addEventListener('mouseout', mouse_out);
 dc_canvas.addEventListener('dblclick', mouse_dblClick);
 window.addEventListener('keydown', key_down);
-
-
-
-
-
-
-
-
-
-
 
