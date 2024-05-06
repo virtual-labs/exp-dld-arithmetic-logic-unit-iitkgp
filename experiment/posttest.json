@@ -2,27 +2,61 @@
   "version": 2.0,
   "questions": [
     {
-      "question": "Maximum number of inputs to a data selector having 3 control pins",
+      "question": "Both the ALU and control unit of CPU employ special purpose storage which is called",
       "answers": {
-        "a": "3",
-        "b": "8",
-        "c": "4",
-        "d": "9"
+        "a": "Registers",
+        "b": "Buffers",
+        "c": "Decoders",
+        "d": "Multiplexers"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The number of levels in the design of a 64 X 1 mux using 4 X 1 mux",
+      "answers": {
+        "a": "4",
+        "b": "5",
+        "c": "3",
+        "d": "2"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "On which factor the number of functions realized by a decoder depends?",
+      "answers": {
+        "a": "Number of gates",
+        "b": "Fanout capacity",
+        "c": "Both",
+        "d": "None of these"
       },
       
       "correctAnswer": "b",
       "difficulty": "beginner"
     },
     {
-      "question": "How many 3 to 8 line decoders are required for a 1-of-32 decoder?",
+      "question": "One mux can realize one function at a time and the functional dependency can be preseved in multilevel realizations",
       "answers": {
-        "a": "8",
-        "b": "1",
-        "c": "4",
-        "d": "2"
+        "a": "True",
+        "b": "False"
       },
       
-      "correctAnswer": "c",
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "In 2's complement overflow",
+      "answers": {
+        "a": "Can not occur when a positive value is added to a negative value",
+        "b": "Is flagged whenever there is carry from sign bit addition",
+        "c": "Is flagged when the carry from sign bit and previous bit matches",
+        "d": "None of these"
+      },
+      
+      "correctAnswer": "a",
       "difficulty": "beginner"
     }
   ]
