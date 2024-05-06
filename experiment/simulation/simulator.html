@@ -63,7 +63,7 @@
                         <div class="section">Inputs-Outputs</div>
                         <div id="BITSwitch" class="switch"><input type="button" value="BITSwitch" /></div>
                         <div id="BITDisplay" class="switch"><input type="button" value="BITDisplay" /></div>
-                        
+                        <div id="Memory" class="switch"><input type="button" value="Memory" /></div>
                     </div>
                     <hr/>
                     <div class="menusection">
@@ -77,15 +77,8 @@
                         <div id="NAND" class="node"><input type="button" value="NAND" /></div>
                         <div id="NOT" class="node"><input type="button" value="NOT" /></div>                        
                     </div>
-                    <hr/> 
+                    <hr/>                    
                     <div class="menusection">
-                        <div class="section">Select Lines</div>
-                        <!-- <div id="OR" class="node"/> background-image="images/Or-gate-en.svg" width="50" height="50"></div> -->
-                        <div id="S1" class="node"><input type="button" value="S1" /></div>
-                        <div id="S2" class="node"><input type="button" value="S2" /></div>
-                                               
-                    </div>                   
-                <!--    <div class="menusection">
                         <div class="section">Clock</div>
                         <div>
                             <label for="high_period">High(sec):</label>
@@ -102,14 +95,14 @@
                         </div>                        
                     </div>
                     <hr/>
-                    <div class="menusection">
+<!--                    <div class="menusection">
                         <div>
                             <label for="curr_memory">Memory:<input type="text" id="curr_memory" value = "" style="width:50px"/></label>
                             <label for="hold_state">Hold State<input name="memory" id="hold_state" value = "1" type="radio"></label>
                             <label for="clear_state">Clear State<input name="memory" id="clear_state" value = "0"  type="radio"></label>
                             <input type="button" id="add_memory" value="Set/Clear Memory" /> 
                         </div>
-                    </div>
+                    </div>-->
                     <hr/>
                     <div class="menusection">
                         <div>
@@ -129,9 +122,9 @@
                         <div class="section">Add Component</div>   
                         <input type="file" id="inputfile">
                         <br>
-                         button to start reading the file 
+                        <!-- button to start reading the file -->
                         <button id="add-component-button">Add Component</button>
-                         file contents will be placed here 
+                        <!-- file contents will be placed here -->
                         <button id="load-circuit-button">Load Circuit</button>
                         <pre id="file-content"></pre>
                         <input type ='hidden' id="data"/>
@@ -167,7 +160,7 @@
                                 <textarea id="pin_map" readonly></textarea>
                             </div>
                         </div>                        
-                    </div>-->
+                    </div>
                 </div>
             </div>
         </div>
