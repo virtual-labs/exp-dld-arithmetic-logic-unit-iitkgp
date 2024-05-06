@@ -1,0 +1,75 @@
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "What is the minimum number of two input NAND gates used to perform the function of two input OR gate ?",
+      "answers": {
+        "a": "2",
+        "b": "4",
+        "c": "3",
+        "d": "5"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "A controlled inverter gives the 1's complement of the input",
+      "answers": {
+        "a": "True",
+        "b": "False"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Maximum number of inputs to a data selector having 3 control pins",
+      "answers": {
+        "a": "3",
+        "b": "8",
+        "c": "4",
+        "d": "9"
+      },
+      
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "How many 3 to 8 line decoders are required for a 1-of-32 decoder?",
+      "answers": {
+        "a": "8",
+        "b": "1",
+        "c": "4",
+        "d": "2"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The number of canonical expressions that can be developed over a 3-valued boolean algebra is",
+      "answers": {
+        "a": "16",
+        "b": "32",
+        "c": "64",
+        "d": "8"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "A switching function is symmetric with respect to a set of literals if and only if the function remains unchanged after",
+      "answers": {
+        "a": "Any permutation of the literals",
+        "b": "All the literals are changed in clockwise order",
+        "c": "Two of these literals are interchanged",
+        "d": "All the literals are changed in anticlockwise order"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    }
+  ]
+}
