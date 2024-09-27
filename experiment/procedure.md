@@ -9,7 +9,7 @@ In case of counters the number of flip-flops depends on the number of different 
 
 # Circuit of 4:1 Multiplexer using NAND Gate:
 <center>
-<img src="./simulation/images/4-to-1 mux_usinh_NAND_gate.png">
+<img src="./simulation/images/4-1MUX (1).png">
 </center>
 
 # Circuit of Full Adder:
@@ -19,7 +19,7 @@ In case of counters the number of flip-flops depends on the number of different 
 
 # Circuit of 1-bit ALU:
 <center>
-<img src="./simulation/images/1-bit-ALU.png">
+<img src="./simulation/images/1-bit-ALU (1).png">
 </center>
 
 - Follow the below manual and perform the experiment
