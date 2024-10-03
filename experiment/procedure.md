@@ -1,4 +1,5 @@
-# Components Required:
+
+## Components Required:
 
 To build any 4 bit ALU, we need :
 1. AND gate, OR gate, XOR gate
