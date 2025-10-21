@@ -1,0 +1,63 @@
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "Both the ALU and control unit of CPU employ special purpose storage which is called",
+      "answers": {
+        "a": "Registers",
+        "b": "Buffers",
+        "c": "Decoders",
+        "d": "Multiplexers"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The number of levels in the design of a 64 X 1 mux using 4 X 1 mux",
+      "answers": {
+        "a": "4",
+        "b": "5",
+        "c": "3",
+        "d": "2"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "On which factor the number of functions realized by a decoder depends?",
+      "answers": {
+        "a": "Number of gates",
+        "b": "Fanout capacity",
+        "c": "Both",
+        "d": "None of these"
+      },
+      
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "One mux can realize one function at a time and the functional dependency can be preseved in multilevel realizations",
+      "answers": {
+        "a": "True",
+        "b": "False"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "In 2's complement overflow",
+      "answers": {
+        "a": "Can not occur when a positive value is added to a negative value",
+        "b": "Is flagged whenever there is carry from sign bit addition",
+        "c": "Is flagged when the carry from sign bit and previous bit matches",
+        "d": "None of these"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    }
+  ]
+}
